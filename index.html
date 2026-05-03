@@ -58,7 +58,7 @@
         .ticker-content {
             display: inline-block;
             padding-left: 100%;
-            animation: marquee 30s linear infinite;
+            animation: marquee 25s linear infinite;
         }
         .ticker-content span { color: var(--accent-red); margin: 0 15px; }
         @keyframes marquee {
@@ -353,10 +353,10 @@
 </head>
 <body>
 
-    <!-- YENİ: HABER ŞERİDİ (NEWS TICKER) -->
+    <!-- HABER ŞERİDİ (NEWS TICKER) -->
     <div class="news-ticker">
         <div class="ticker-content">
-            📺 CATCH 'LOVE YOU TEACHER' EVERY SATURDAY ON VIKI & ONED APP! 📺 <span>✨</span> THE SPOOKY LOVE TALE IS IN PRODUCTION <span>✨</span> 📺 CATCH 'LOVE YOU TEACHER' EVERY SATURDAY ON VIKI & ONED APP! 📺 <span>✨</span> THE SPOOKY LOVE TALE IS IN PRODUCTION <span>✨</span>
+            📺 CATCH 'LOVE YOU TEACHER' EVERY SATURDAY ON VIKI & ONED APP! 📺 &nbsp;&nbsp;&nbsp;&nbsp;✨&nbsp;&nbsp;&nbsp;&nbsp; 📺 CATCH 'LOVE YOU TEACHER' EVERY SATURDAY ON VIKI & ONED APP! 📺 &nbsp;&nbsp;&nbsp;&nbsp;✨&nbsp;&nbsp;&nbsp;&nbsp; 📺 CATCH 'LOVE YOU TEACHER' EVERY SATURDAY ON VIKI & ONED APP! 📺
         </div>
     </div>
 
@@ -690,7 +690,7 @@
             <p id="authSubtitle" style="text-align: center; margin-bottom: 20px; color: var(--text-muted); font-size: 0.9rem;">Create an account to join the community.</p>
             <div id="authError"></div>
             <form id="authForm">
-                <!-- YENİ: KULLANICI ADI KUTUSU -->
+                <!-- KULLANICI ADI KUTUSU -->
                 <input type="text" id="authUsername" class="auth-input" placeholder="Choose a Username (Unique)" minlength="3" style="display: none;">
                 
                 <input type="email" id="authEmail" class="auth-input" placeholder="Email Address" required>
@@ -826,7 +826,7 @@
         window.allCommunityPosts = [];
         window.currentAuthMode = 'login';
         window.currentEditPostId = null;
-        window.currentUsername = ""; // Aktif kullanıcının adı
+        window.currentUsername = ""; 
 
         // ==========================================
         // NEFRET SÖYLEMİ (ANTI-HATE) FİLTRESİ 
@@ -969,7 +969,6 @@
             window.currentEditPostId = postId;
             document.getElementById('editPostCategory').value = post.category;
             
-            // Akıllı Form Güncellemesi için eventi tetikle
             document.getElementById('editPostCategory').dispatchEvent(new Event('change'));
 
             document.getElementById('editPostVibe').value = post.vibe || '';
@@ -989,7 +988,6 @@
             const newDesc = document.getElementById('editPostDesc').value;
             
             let newVibe = document.getElementById('editPostVibe').value;
-            // Eğer Vibe gizliyse veya boşsa General olarak kaydet
             if(document.getElementById('editPostVibe').style.display === 'none' || !newVibe) {
                 newVibe = "General 📌";
             }
@@ -1040,7 +1038,6 @@
             }
 
             let controlsHTML = '';
-            // Artık email ile değil, veritabanına kayıtlı username ile yetki kontrolü yapıyoruz.
             const isOwner = (window.currentUsername !== "" && window.currentUsername === post.author) || 
                             (auth.currentUser && auth.currentUser.email.split('@')[0] === post.author);
             
@@ -1053,7 +1050,6 @@
                 `;
             }
 
-            // Link varsa Butonu Göster
             let linkHTML = '';
             let shareBtnHTML = '';
             if (post.link && post.link.trim() !== "") {
@@ -1063,8 +1059,6 @@
 
             const displayVibe = post.vibe || "General 📌";
             let vibeBadgeHTML = `<span class="vibe-badge">${displayVibe}</span>`;
-            
-            // Eğer Kategori Fan Fiction değilse Vibe Badge'ini gösterme
             if(post.category !== "Fan Fiction") vibeBadgeHTML = "";
 
             return `
@@ -1126,7 +1120,7 @@
             document.getElementById('authSubmitBtn').innerText = mode === 'signup' ? 'SIGN UP' : 'LOG IN';
             document.getElementById('authToggleText').innerText = mode === 'signup' ? 'Already have an account?' : 'Need an account?';
             
-            // Kullanıcı adı kutusu sadece Kayıt Ol (Sign Up) modundayken görünür.
+            // KULLANICI ADI KUTUSU GÖSTERİM AYARI
             const userBox = document.getElementById('authUsername');
             userBox.style.display = mode === 'signup' ? 'block' : 'none';
             userBox.required = mode === 'signup';
@@ -1161,7 +1155,6 @@
             if (window.currentAuthMode === 'signup') {
                 const desiredUsername = document.getElementById('authUsername').value.trim();
                 
-                // Kullanıcı adı benzersizlik kontrolü
                 try {
                     const q = query(collection(db, "users"), where("usernameLower", "==", desiredUsername.toLowerCase()));
                     const querySnapshot = await getDocs(q);
@@ -1173,10 +1166,8 @@
                         return;
                     }
 
-                    // İsim boşta ise hesabı yarat
                     const userCred = await createUserWithEmailAndPassword(auth, email, password);
                     
-                    // Seçtiği kullanıcı adını Firebase'e kaydet
                     await setDoc(doc(db, "users", userCred.user.uid), {
                         username: desiredUsername,
                         usernameLower: desiredUsername.toLowerCase(),
@@ -1193,7 +1184,6 @@
                 }
 
             } else {
-                // Sadece Giriş Yapma (Log In)
                 try {
                     await signInWithEmailAndPassword(auth, email, password);
                     document.getElementById('authModal').style.display = 'none'; 
@@ -1206,7 +1196,7 @@
             }
         });
 
-        // Kullanıcı giriş yaptığında adını çek
+        // Kullanıcı adını ekrana yansıtma
         onAuthStateChanged(auth, async (user) => {
             submitBtn.disabled = false;
             submitBtn.innerText = window.currentAuthMode === 'signup' ? 'SIGN UP' : 'LOG IN';
