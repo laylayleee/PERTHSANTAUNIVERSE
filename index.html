@@ -45,7 +45,11 @@
 
         body {
             background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 15% 20%, rgba(138, 0, 28, 0.25) 0%, transparent 40%), radial-gradient(circle at 85% 80%, rgba(255, 0, 51, 0.15) 0%, transparent 40%), linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(138, 0, 28, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255, 0, 51, 0.15) 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
             background-attachment: fixed;
             color: var(--text-main);
@@ -98,7 +102,7 @@
         .logout-link:hover { background: rgba(255,255,255,0.1); }
 
         .page-view { display: none; animation: fadeIn 0.4s ease-out; }
-        #homePageView { display: block; }
+        #homePageView { display: block; } 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-bottom: 60px; align-items: center; }
@@ -226,7 +230,7 @@
         .auth-input, .post-input { width: 100%; padding: 14px; margin-bottom: 15px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-family: var(--font-sans); transition: all 0.3s ease; }
         .auth-input:focus, .post-input:focus { outline: none; border-color: var(--accent-red); background: rgba(20,0,5,0.8); box-shadow: 0 0 10px rgba(255,0,51,0.2); }
         select.post-input option { background: #0a0005; color: white; }
-        #authError, #postMessage, #editPostMessage { font-size: 0.85rem; text-align: center; margin-bottom: 10px; min-height: 20px; font-weight: bold; color: #4caf50; }
+        #authError, #postMessage, #editPostMessage, #editScheduleMessage { font-size: 0.85rem; text-align: center; margin-bottom: 10px; min-height: 20px; font-weight: bold; color: #4caf50; }
         #authError { color: var(--accent-red); }
 
         @media (max-width: 768px) {
@@ -554,7 +558,7 @@
             <form id="scheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <input type="date" id="eventDate" class="post-input" required style="width: 100%; margin-bottom:0;">
                 <input type="text" id="eventTitle" placeholder="Event Name (e.g. Mint Magazine Interview)" required class="post-input" style="width: 100%; margin-bottom:0;">
-                <input type="text" id="eventTags" placeholder="Hashtags (e.g. #PerthSanta #MintMag)" class="post-input" style="width: 100%; grid-column: 1 / -1; margin-bottom:0;">
+                <input type="text" id="eventKeywords" placeholder="Keywords / Hashtags (e.g. #PerthSanta)" class="post-input" style="width: 100%; grid-column: 1 / -1; margin-bottom:0;">
                 <button type="submit" class="btn" style="grid-column: 1 / -1;" data-lang="btnAddSchedule">ADD TO SCHEDULE</button>
             </form>
             <p id="scheduleMessage" style="text-align:center; margin-top:10px; font-weight:bold;"></p>
@@ -699,6 +703,20 @@
         </div>
     </div>
 
+    <div id="editScheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('editScheduleModal')">&times;</span>
+            <h2 data-lang="adminEditTitle" style="color: var(--accent-red); margin-bottom: 25px;">EDIT EVENT</h2>
+            <div id="editScheduleMessage"></div>
+            <form id="editScheduleForm" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                <input type="date" id="editEventDate" class="post-input" required style="width: 100%; margin-bottom:0;">
+                <input type="text" id="editEventTitle" placeholder="Event Name" required class="post-input" style="width: 100%; margin-bottom:0;">
+                <input type="text" id="editEventKeywords" placeholder="Keywords / Hashtags" class="post-input" style="width: 100%; margin-bottom:0;">
+                <button type="submit" class="btn" id="editScheduleSubmitBtn" data-lang="btnUpdateEvent" style="margin-top: 10px;">UPDATE EVENT</button>
+            </form>
+        </div>
+    </div>
+
     <div id="aboutModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('aboutModal')">&times;</span>
@@ -735,11 +753,12 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDocs, where, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-        // GLOBAL DEĞİŞKENLER VE FONKSİYONLAR İLK ÖNCE TANIMLANIYOR
         window.currentArchiveCategory = "Fan Fiction";
         window.allCommunityPosts = [];
+        window.allScheduleEvents = [];
         window.currentAuthMode = 'login';
         window.currentEditPostId = null;
+        window.currentEditScheduleId = null;
         window.currentUsername = ""; 
         const ADMIN_EMAIL = "laylayleeepsuniverse@gmail.com";
         
@@ -770,6 +789,8 @@
             'scheduleOpened': { en: "* This page was launched on May 4th.", th: "* หน้านี้เปิดตัวเมื่อวันที่ 4 พฤษภาคม" },
             'adminTitle': { en: "ADMIN: ADD NEW EVENT", th: "ผู้ดูแลระบบ: เพิ่มกิจกรรมใหม่" },
             'btnAddSchedule': { en: "ADD TO SCHEDULE", th: "เพิ่มในตาราง" },
+            'adminEditTitle': { en: "EDIT EVENT", th: "แก้ไขกิจกรรม" },
+            'btnUpdateEvent': { en: "UPDATE EVENT", th: "อัปเดตกิจกรรม" },
             'aboutTitle': { en: "WHO IS PERTHSANTA?", th: "PERTHSANTA คือใคร?" },
             'aboutP1': { en: "Two distinct paths, one powerful universe. Perth Tanapon and Santa Pongsapak form one of the most dynamic and fiercely talented duos in the Thai entertainment industry.", th: "สองเส้นทางที่แตกต่างสู่หนึ่งจักรวาลที่ทรงพลัง Perth Tanapon และ Santa Pongsapak คือหนึ่งในคู่หูที่มีความสามารถและโดดเด่นที่สุดในวงการบันเทิงไทย" },
             'aboutP2': { en: "Individually, they have proven themselves as versatile artists. Together, their magnetic on-screen chemistry and shared passion for storytelling have created an unstoppable force.", th: "ในฐานะศิลปินเดี่ยว พวกเขาได้พิสูจน์ตัวเองแล้วว่าเป็นศิลปินที่เก่งกาจ และเมื่อรวมกัน เคมีบนหน้าจอที่ดึงดูดใจของพวกเขาได้สร้างพลังที่ไม่อาจต้านทานได้" },
@@ -843,15 +864,7 @@
             'btnSubmitShare': { en: "SHARE WITH COMMUNITY", th: "แบ่งปันกับชุมชน" },
             'editTitle': { en: "Edit Post", th: "แก้ไขโพสต์" },
             'editSub': { en: "Update your creation details.", th: "อัปเดตรายละเอียดผลงานของคุณ" },
-            'btnUpdate': { en: "UPDATE POST", th: "อัปเดตโพสต์" },
-            'modalAboutDesc': { en: "Welcome to the ultimate fan-driven portal dedicated to Perth Tanapon and Santa Pongsapak. This site was built by fans, for fans, to celebrate their incredible acting, music, and the universes they bring to life.", th: "ยินดีต้อนรับสู่พอร์ทัลของแฟนคลับที่อุทิศให้กับ Perth Tanapon และ Santa Pongsapak เว็บไซต์นี้สร้างขึ้นโดยแฟนๆ เพื่อแฟนๆ เพื่อเฉลิมฉลองการแสดง ดนตรี และจักรวาลที่พวกเขาทำให้มีชีวิตขึ้นมา" },
-            'modalContactDesc': { en: "You can reach me directly on X (Twitter):", th: "คุณสามารถติดต่อฉันได้โดยตรงทาง X (Twitter):" },
-            'modalGuideList': { en: "<li><strong>Respect:</strong> Always be kind to other fans.</li><li><strong>Relevance:</strong> Ensure your submissions are related to Perth, Santa, or their projects.</li><li><strong>No NSFW/Inappropriate Content:</strong> Keep all shared links appropriate for a general audience.</li><li><strong>Hate Speech Free:</strong> The universe relies on positivity. Disrespectful content and bringing up unrelated past ships is strictly filtered and not allowed.</li><li><strong>Credit:</strong> Always give credit to original creators.</li>", th: "<li><strong>เคารพ:</strong> โปรดใจดีกับแฟนๆ คนอื่น</li><li><strong>ความเกี่ยวข้อง:</strong> ตรวจสอบให้แน่ใจว่าผลงานของคุณเกี่ยวข้องกับ Perth, Santa หรือโปรเจกต์ของพวกเขา</li><li><strong>ไม่มีเนื้อหาที่ไม่เหมาะสม:</strong> ให้แน่ใจว่าลิงก์ที่แชร์เหมาะสมสำหรับผู้ชมทุกวัย</li><li><strong>ไม่มีคำพูดแสดงความเกลียดชัง:</strong> จักรวาลนี้พึ่งพาพลังบวก เนื้อหาที่ไม่ให้เกียรติและพูดถึงคู่ชิปในอดีตที่ไม่เกี่ยวข้องจะถูกกรองและไม่อนุญาต</li><li><strong>ให้เครดิต:</strong> โปรดให้เครดิตผู้สร้างสรรค์ผลงานต้นฉบับเสมอ</li>" },
-            'btnReadMore': { en: "📖 READ MORE", th: "📖 อ่านเพิ่มเติม" },
-            'btnOpenLink': { en: "OPEN LINK &rarr;", th: "เปิดลิงก์ &rarr;" },
-            'btnShare': { en: "🔗 Share", th: "🔗 แชร์" },
-            'btnEdit': { en: "✏️ Edit", th: "✏️ แก้ไข" },
-            'btnDelete': { en: "🗑️ Delete", th: "🗑️ ลบ" }
+            'btnUpdate': { en: "UPDATE POST", th: "อัปเดตโพสต์" }
         };
 
         window.currentLang = 'en';
@@ -876,7 +889,7 @@
             });
 
             if(window.allCommunityPosts.length > 0) window.renderFeeds();
-            buildScheduleGrid();
+            window.renderSchedule();
         }
 
         window.showView = function(viewId, hash = null) {
@@ -898,7 +911,6 @@
             
             const titleEl = document.getElementById('archiveTitle');
             const subEl = document.getElementById('archiveSubtitle');
-            const addBtnEl = document.getElementById('archiveAddBtn');
             const bannerEl = document.getElementById('suggestBanner');
 
             if (categoryName === "Fan Fiction") {
@@ -940,7 +952,6 @@
             });
         }
 
-        // FİREBASE BAŞLATMA
         const firebaseConfig = {
           apiKey: "AIzaSyAWA9jd1ud0F7aLuqY6L_Fy4f0JhgO12lk",
           authDomain: "perthsanta-universe.firebaseapp.com",
@@ -954,7 +965,152 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // SUPER ADMIN SİLME VE DÜZENLEME
+        // ==========================================
+        // SCHEDULE (TAKVİM) DÜZENLEME VE SİLME (SADECE ADMIN)
+        // ==========================================
+        window.renderSchedule = function() {
+            const schedGrid = document.getElementById('scheduleGrid');
+            if(!schedGrid) return;
+            
+            schedGrid.innerHTML = '';
+            for(let i = 4; i < 12; i++) {
+                const monthName = window.currentLang === 'th' ? monthsTh[i] : monthsEn[i];
+                schedGrid.innerHTML += `
+                    <div class="glass-card month-box" id="monthBox-${i}">
+                        <div class="month-name">${monthName}</div>
+                        <div class="events-list" id="eventsList-${i}"></div>
+                    </div>
+                `;
+            }
+
+            window.allScheduleEvents.forEach(data => {
+                if(!data.date) return;
+                
+                const dateObj = new Date(data.date + 'T12:00:00'); 
+                const monthIndex = dateObj.getMonth();
+                const day = dateObj.getDate();
+                const year = dateObj.getFullYear();
+                
+                if (year !== 2026) return; 
+
+                const monthName = window.currentLang === 'th' ? monthsTh[monthIndex] : monthsEn[monthIndex];
+                const listEl = document.getElementById(`eventsList-${monthIndex}`);
+                
+                if(listEl) {
+                    let tagsHTML = '';
+                    if(data.keywords && data.keywords.trim() !== '') {
+                        tagsHTML = `<span class="event-tags">${data.keywords}</span>`;
+                    }
+                    
+                    let adminControls = '';
+                    if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
+                        adminControls = `
+                        <div style="margin-top: 8px; display: flex; gap: 10px;">
+                            <button class="btn-outline" style="padding: 4px 8px; font-size: 0.65rem; border-color: #ffaa00; color: #ffaa00;" onclick="openEditSchedule('${data.id}')">✏️ Edit</button>
+                            <button class="btn-outline" style="padding: 4px 8px; font-size: 0.65rem; border-color: var(--accent-red); color: var(--accent-red);" onclick="deleteSchedule('${data.id}')">🗑️ Delete</button>
+                        </div>
+                        `;
+                    }
+
+                    listEl.innerHTML += `
+                        <div class="event-item">
+                            <span class="event-date">${day} ${monthName}</span>
+                            <span class="event-title">${data.title}</span>
+                            ${tagsHTML}
+                            ${adminControls}
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        onSnapshot(query(collection(db, "schedule"), orderBy("date", "asc")), (snap) => {
+            window.allScheduleEvents = [];
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                data.id = docSnap.id;
+                window.allScheduleEvents.push(data);
+            });
+            window.renderSchedule();
+        });
+
+        window.deleteSchedule = async function(id) {
+            if(confirm("Are you sure you want to delete this event?")) {
+                try {
+                    await deleteDoc(doc(db, "schedule", id));
+                } catch(error) {
+                    alert("Error deleting event: " + error.message);
+                }
+            }
+        }
+
+        window.openEditSchedule = function(id) {
+            const event = window.allScheduleEvents.find(e => e.id === id);
+            if(!event) return;
+            window.currentEditScheduleId = id;
+            document.getElementById('editEventDate').value = event.date;
+            document.getElementById('editEventTitle').value = event.title;
+            document.getElementById('editEventKeywords').value = event.keywords || '';
+            document.getElementById('editScheduleModal').style.display = 'block';
+        }
+
+        document.getElementById('editScheduleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('editScheduleSubmitBtn');
+            const msg = document.getElementById('editScheduleMessage');
+            btn.disabled = true;
+            btn.innerText = "WAIT...";
+            try {
+                await updateDoc(doc(db, "schedule", window.currentEditScheduleId), {
+                    date: document.getElementById('editEventDate').value,
+                    title: document.getElementById('editEventTitle').value,
+                    keywords: document.getElementById('editEventKeywords').value || ""
+                });
+                msg.style.color = "#4caf50";
+                msg.innerText = "Event updated!";
+                setTimeout(() => {
+                    document.getElementById('editScheduleModal').style.display = 'none';
+                    msg.innerText = "";
+                    btn.disabled = false;
+                    btn.innerText = langDict['btnUpdateEvent'] ? langDict['btnUpdateEvent'][window.currentLang] : "UPDATE EVENT";
+                }, 1000);
+            } catch(err) {
+                msg.style.color = "var(--accent-red)";
+                msg.innerText = err.message;
+                btn.disabled = false;
+                btn.innerText = "UPDATE EVENT";
+            }
+        });
+
+        document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const msg = document.getElementById('scheduleMessage');
+            btn.disabled = true;
+            btn.innerText = "WAIT...";
+
+            try {
+                await addDoc(collection(db, "schedule"), {
+                    date: document.getElementById('eventDate').value,
+                    title: document.getElementById('eventTitle').value,
+                    keywords: document.getElementById('eventKeywords').value || "",
+                    createdAt: serverTimestamp()
+                });
+                msg.style.color = "#4caf50";
+                msg.innerText = window.currentLang === 'th' ? "เพิ่มกิจกรรมสำเร็จแล้ว!" : "Event successfully added!";
+                e.target.reset();
+            } catch(err) {
+                msg.style.color = "var(--accent-red)";
+                msg.innerText = "Error: " + err.message;
+            }
+            btn.disabled = false;
+            btn.innerText = langDict['btnAddSchedule'][window.currentLang] || "ADD TO SCHEDULE";
+            setTimeout(() => msg.innerText = "", 3000);
+        });
+
+        // ==========================================
+        // COMMUNITY POST İŞLEMLERİ 
+        // ==========================================
         window.deletePost = async function(postId) {
             if(confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
                 try {
@@ -1020,133 +1176,6 @@
             }
         });
 
-        // SCHEDULE GRİD OLUŞTURMA
-        function buildScheduleGrid() {
-            const schedGrid = document.getElementById('scheduleGrid');
-            if(!schedGrid) return;
-            schedGrid.innerHTML = '';
-            for(let i = 4; i < 12; i++) {
-                const monthName = window.currentLang === 'th' ? monthsTh[i] : monthsEn[i];
-                schedGrid.innerHTML += `
-                    <div class="glass-card month-box" id="monthBox-${i}">
-                        <div class="month-name">${monthName}</div>
-                        <div class="events-list" id="eventsList-${i}"></div>
-                    </div>
-                `;
-            }
-        }
-        buildScheduleGrid(); 
-
-        onSnapshot(query(collection(db, "schedule"), orderBy("date", "asc")), (snap) => {
-            for(let i = 4; i < 12; i++) {
-                const list = document.getElementById(`eventsList-${i}`);
-                if(list) list.innerHTML = '';
-            }
-
-            snap.forEach(docSnap => {
-                const data = docSnap.data();
-                if(!data.date) return;
-                
-                const dateObj = new Date(data.date + 'T12:00:00'); 
-                const monthIndex = dateObj.getMonth();
-                const day = dateObj.getDate();
-                const year = dateObj.getFullYear();
-                
-                if (year !== 2026) return; 
-
-                const monthName = window.currentLang === 'th' ? monthsTh[monthIndex] : monthsEn[monthIndex];
-                const listEl = document.getElementById(`eventsList-${monthIndex}`);
-                
-                if(listEl) {
-                    let tagsHTML = '';
-                    if(data.tags && data.tags.trim() !== '') {
-                        tagsHTML = `<span class="event-tags">${data.tags}</span>`;
-                    }
-                    
-                    listEl.innerHTML += `
-                        <div class="event-item">
-                            <span class="event-date">${day} ${monthName}</span>
-                            <span class="event-title">${data.title}</span>
-                            ${tagsHTML}
-                        </div>
-                    `;
-                }
-            });
-        });
-
-        document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const msg = document.getElementById('scheduleMessage');
-            btn.disabled = true;
-            btn.innerText = "WAIT...";
-
-            try {
-                await addDoc(collection(db, "schedule"), {
-                    date: document.getElementById('eventDate').value,
-                    title: document.getElementById('eventTitle').value,
-                    tags: document.getElementById('eventTags').value || "",
-                    createdAt: serverTimestamp()
-                });
-                msg.style.color = "#4caf50";
-                msg.innerText = window.currentLang === 'th' ? "เพิ่มกิจกรรมสำเร็จแล้ว!" : "Event successfully added!";
-                e.target.reset();
-            } catch(err) {
-                msg.style.color = "var(--accent-red)";
-                msg.innerText = "Error: " + err.message;
-            }
-            btn.disabled = false;
-            btn.innerText = langDict['btnAddSchedule'][window.currentLang] || "ADD TO SCHEDULE";
-            setTimeout(() => msg.innerText = "", 3000);
-        });
-
-        // AKILLI FORMLAR VE DİĞER KONTROLLER
-        const postCat = document.getElementById('postCategory');
-        const postVibe = document.getElementById('postVibe');
-        const postLink = document.getElementById('postLink');
-
-        if(postCat) {
-            postCat.addEventListener('change', () => {
-                const val = postCat.value;
-                if(val === 'Fan Fiction') {
-                    postVibe.style.display = 'block';
-                    postLink.required = true;
-                    postLink.placeholder = "Link (e.g., Wattpad, AO3) *Required";
-                } else if(val === 'Fan Game') {
-                    postVibe.style.display = 'none';
-                    postLink.required = true;
-                    postLink.placeholder = "Link to the game *Required";
-                } else if(val === 'Discussion') {
-                    postVibe.style.display = 'none';
-                    postLink.required = false;
-                    postLink.placeholder = "Link (Optional)";
-                }
-            });
-        }
-
-        const editCat = document.getElementById('editPostCategory');
-        const editVibe = document.getElementById('editPostVibe');
-        const editLink = document.getElementById('editPostLink');
-
-        if(editCat) {
-            editCat.addEventListener('change', () => {
-                const val = editCat.value;
-                if(val === 'Fan Fiction') {
-                    editVibe.style.display = 'block';
-                    editLink.required = true;
-                    editLink.placeholder = "Link *Required";
-                } else if(val === 'Fan Game') {
-                    editVibe.style.display = 'none';
-                    editLink.required = true;
-                    editLink.placeholder = "Link *Required";
-                } else if(val === 'Discussion') {
-                    editVibe.style.display = 'none';
-                    editLink.required = false;
-                    editLink.placeholder = "Link (Optional)";
-                }
-            });
-        }
-
         window.openReadMore = function(postId) {
             const post = window.allCommunityPosts.find(p => p.id === postId);
             if(!post) return;
@@ -1170,14 +1199,14 @@
             
             let linkHTML = '';
             if (post.link && post.link.trim() !== "") {
-                const btnText = langDict['btnOpenLink'][window.currentLang];
+                const btnText = langDict['btnOpenLink'] ? langDict['btnOpenLink'][window.currentLang] : 'OPEN LINK';
                 linkHTML = `<a href="${post.link}" target="_blank" class="btn" style="width: 100%; text-align: center;">${btnText}</a>`;
             }
             document.getElementById('rmLinkDiv').innerHTML = linkHTML;
             
             let shareHTML = '';
             if (post.link && post.link.trim() !== "") {
-                const shareText = langDict['btnShare'][window.currentLang];
+                const shareText = langDict['btnShare'] ? langDict['btnShare'][window.currentLang] : 'Share';
                 shareHTML = `<button class="share-btn" style="width: 100%; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);" onclick="sharePost('${post.link}')">🔗 ${shareText}</button>`;
             }
             document.getElementById('rmShareDiv').innerHTML = shareHTML;
@@ -1197,14 +1226,13 @@
             }
 
             let controlsHTML = '';
-            // SUPER ADMIN YETKİSİ
-            const isAdmin = auth.currentUser && auth.currentUser.email === ADMIN_EMAIL;
-            const isOwner = isAdmin || (window.currentUsername !== "" && window.currentUsername === post.author) || 
+            // TOPLULUK POSTLARINI SADECE PAYLAŞAN DÜZENLEYEBİLİR/SİLEBİLİR. (Admin yetkisi buradan kaldırıldı)
+            const isOwner = (window.currentUsername !== "" && window.currentUsername === post.author) || 
                             (auth.currentUser && auth.currentUser.email.split('@')[0] === post.author);
             
             if (isOwner) {
-                const editTxt = langDict['btnEdit'][window.currentLang];
-                const delTxt = langDict['btnDelete'][window.currentLang];
+                const editTxt = langDict['btnEdit'] ? langDict['btnEdit'][window.currentLang] : 'Edit';
+                const delTxt = langDict['btnDelete'] ? langDict['btnDelete'][window.currentLang] : 'Delete';
                 controlsHTML = `
                     <div style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-top: 10px;">
                         <button class="btn-outline" style="padding: 6px 12px; font-size: 0.75rem; border-color: #ffaa00; color: #ffaa00; flex: 1;" onclick="openEditPost('${post.id}')">${editTxt}</button>
@@ -1218,12 +1246,12 @@
             let readMoreBtn = '';
             
             if (isCompact) {
-                const rmTxt = langDict['btnReadMore'][window.currentLang];
+                const rmTxt = langDict['btnReadMore'] ? langDict['btnReadMore'][window.currentLang] : 'READ MORE';
                 readMoreBtn = `<button class="btn-outline" style="width: 100%; margin-top: 10px; font-size: 0.75rem; border-color: rgba(255,255,255,0.3); color: white;" onclick="openReadMore('${post.id}')">${rmTxt}</button>`;
             } else {
                 if (post.link && post.link.trim() !== "") {
-                    const openTxt = langDict['btnOpenLink'][window.currentLang];
-                    const shareTxt = langDict['btnShare'][window.currentLang];
+                    const openTxt = langDict['btnOpenLink'] ? langDict['btnOpenLink'][window.currentLang] : 'OPEN LINK';
+                    const shareTxt = langDict['btnShare'] ? langDict['btnShare'][window.currentLang] : 'Share';
                     linkHTML = `<a href="${post.link}" target="_blank" class="btn-outline" style="width: 100%; margin-top: 15px; text-align: center;">${openTxt}</a>`;
                     shareBtnHTML = `<button class="share-btn" style="width: 100%; justify-content: center;" onclick="sharePost('${post.link}')">🔗 ${shareTxt}</button>`;
                 }
@@ -1423,7 +1451,6 @@
 
                 document.getElementById('userEmailDisplay').innerText = "@" + window.currentUsername; 
                 
-                // SUPER ADMIN KONTROLÜ
                 if(user.email === ADMIN_EMAIL) {
                     document.getElementById('adminSchedulePanel').style.display = 'block';
                 }
@@ -1438,6 +1465,7 @@
             }
 
             if(window.allCommunityPosts.length > 0) window.renderFeeds();
+            window.renderSchedule();
         });
 
         window.logoutUser = function() {
@@ -1465,12 +1493,6 @@
             let vibe = document.getElementById('postVibe').value;
             if (document.getElementById('postVibe').style.display === 'none' || !vibe) {
                 vibe = "General 📌";
-            }
-
-            if(containsHateSpeech(title) || containsHateSpeech(desc)) {
-                postMessage.style.color = "var(--accent-red)";
-                postMessage.innerText = window.currentLang === 'th' ? "โพสต์ของคุณมีคำที่ถูกกรอง โปรดโฟกัสที่ PerthSanta และให้เกียรติซึ่งกันและกัน" : "Your post contains filtered words. Let's keep the focus on PerthSanta and keep it respectful.";
-                return;
             }
 
             postSubmitBtn.disabled = true;
@@ -1532,6 +1554,56 @@
                 const msg = window.currentLang === 'th' ? "แฟนฟิคที่สุ่มได้นี้ไม่มีลิงก์โดยตรง" : "The selected random fic doesn't have a direct link.";
                 alert(msg);
             }
+        }
+        
+        const postCatInput = document.getElementById('postCategory');
+        const postVibeInput = document.getElementById('postVibe');
+        const postLinkInput = document.getElementById('postLink');
+
+        if(postCatInput) {
+            postCatInput.addEventListener('change', () => {
+                const val = postCatInput.value;
+                if(val === 'Fan Fiction') {
+                    postVibeInput.style.display = 'block';
+                    postLinkInput.required = true;
+                    postLinkInput.placeholder = "Link (e.g., Wattpad, AO3) *Required";
+                } else if(val === 'Fan Game') {
+                    postVibeInput.style.display = 'none';
+                    postLinkInput.required = true;
+                    postLinkInput.placeholder = "Link to the game *Required";
+                } else if(val === 'Discussion') {
+                    postVibeInput.style.display = 'none';
+                    postLinkInput.required = false;
+                    postLinkInput.placeholder = "Link (Optional)";
+                } else {
+                    postVibeInput.style.display = 'none';
+                    postLinkInput.required = false;
+                    postLinkInput.placeholder = "Link";
+                }
+            });
+        }
+
+        const editCatInput = document.getElementById('editPostCategory');
+        const editVibeInput = document.getElementById('editPostVibe');
+        const editLinkInput = document.getElementById('editPostLink');
+
+        if(editCatInput) {
+            editCatInput.addEventListener('change', () => {
+                const val = editCatInput.value;
+                if(val === 'Fan Fiction') {
+                    editVibeInput.style.display = 'block';
+                    editLinkInput.required = true;
+                    editLinkInput.placeholder = "Link *Required";
+                } else if(val === 'Fan Game') {
+                    editVibeInput.style.display = 'none';
+                    editLinkInput.required = true;
+                    editLinkInput.placeholder = "Link *Required";
+                } else if(val === 'Discussion') {
+                    editVibeInput.style.display = 'none';
+                    editLinkInput.required = false;
+                    editLinkInput.placeholder = "Link (Optional)";
+                }
+            });
         }
     </script>
 
