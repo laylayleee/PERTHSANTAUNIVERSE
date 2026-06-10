@@ -831,6 +831,9 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, doc, updateDoc, deleteDoc, getDocs, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Global module scope variable for Firebase subscriptions
+        let unsubscribes = [];
+
         window.currentArchiveCategory = "Fan Fiction";
         window.allCommunityPosts = [];
         window.allScheduleEvents = [];
@@ -897,7 +900,7 @@
             'heroTitle': { en: "ENTER THE <br><span>PERTHSANTA UNIVERSE</span>", th: "เข้าสู่ <br><span>จักรวาล PERTHSANTA</span>" },
             'heroSub': { en: "Everything about PerthSanta is here.", th: "ทุกอย่างเกี่ยวกับ PerthSanta อยู่ที่นี่" },
             'heroBtn': { en: "ENTER THE UNIVERSE &rarr;", th: "เข้าสู่จักรวาล &rarr;" },
-            'concertTitle': { en: "PERTHSANTA'S FIRST CONCERT \"DEVIL'S KISS\" ON JULY 18-19", th: "คอนเสิร์ตครั้งแรกของ PERTHSANTA \"DEVIL'S KISS\" วันที่ 18-19 กรกฎาคมนี้" },
+            'concertTitle': { en: "PERTHSANTA'S FIRST CONCERT \"DEVIL'S KISS\" ON JULY 18-19", th: "คอนเสิร์tครั้งแรกของ PERTHSANTA \"DEVIL'S KISS\" วันที่ 18-19 กรกฎาคมนี้" },
             'btnConcert': { en: "COMING SOON", th: "เร็วๆ นี้" },
             'scheduleTitle': { en: "2026 EVENT SCHEDULE", th: "ตารางกิจกรรมปี 2026" },
             'scheduleSub': { en: "Stay updated with Perth and Santa's official activities.", th: "ติดตามกิจกรรมอย่างเป็นทางการของ Perth และ Santa" },
@@ -909,8 +912,8 @@
             'aboutTitle': { en: "WHO IS PERTHSANTA?", th: "PERTHSANTA คือใคร?" },
             'aboutP1': { en: "Two distinct paths, one powerful universe. Perth Tanapon and Santa Pongsapak form one of the most dynamic and fiercely talented duos in the Thai entertainment industry.", th: "สองเส้นทางที่แตกต่างสู่หนึ่งจักรวาลที่ทรงพลัง Perth Tanapon และ Santa Pongsapak คือหนึ่งในคู่หูที่มีความสามารถและโดดเด่นที่สุดในวงการบันเทิงไทย" },
             'aboutP2': { en: "Individually, they have proven themselves as versatile artists. Together, their magnetic on-screen chemistry and shared passion for storytelling have created an unstoppable force.", th: "ในฐานะศิลปินเดี่ยว พวกเขาได้พิสูจน์ตัวเองแล้วว่าเป็นศิลปินที่เก่งกาจ และเมื่อรวมกัน เคมีบนหน้าจอที่ดึงดูดใจของพวกเขาได้สร้างพลังที่ไม่อาจต้านทานได้" },
-            'bioPerth': { en: "Stepping into the spotlight around 2017, Perth quickly rose to international fame. Known for his ability to convey deep, complex emotions, he is a multi-talented artist, gifted musician, singer, and guitarist. He is currently gearing up for his highly anticipated solo projects, <strong>Scarlet Heart</strong> and <strong>High & Low</strong>.", th: "เริ่มเข้าสู่วงการในปี 2017 Perth โด่งดังระดับนานาชาติอย่างรวดเร็ว เป็นที่รู้จักจากความสามารถในการถ่ายทอดอารมณ์ที่ลึกซึ้ง เขาเป็นศิลปินที่มีความสามารถหลากหลาย เป็นทั้งนักดนตรี นักร้อง และมือกีตาร์ ปัจจุบันเขากำลังเตรียมพร้อมสำหรับโปรเจกต์เดี่ยวที่หลายคนรอคอย <strong>Scarlet Heart</strong> และ <strong>High & Low</strong>" },
-            'bioSanta': { en: "Santa burst onto the scene capturing hearts with his phenomenal dance skills and highly expressive acting. Known for his incredible versatility and natural ability to bring deep emotional resonance to his characters, he truly lights up the screen with every performance. Beyond his outstanding acting prowess, he is also a talented performer and a proud member of the beloved T-Pop group <strong>Jasper</strong>.", th: "Santa ปรากฏตัวและขโมยหัวใจด้วยทักษะการเต้นที่ยอดเยี่ยมและการแสดงที่สื่ออารมณ์ ด้วยความสามารถในการนำอารมณ์ที่ลึกซึ้งมาสู่ตัวละคร นอกเหนือจากความสามารถด้านการแสดงแล้ว เขayังเป็นนักแสดงที่มีพรสวรรค์และเป็นสมาชิกของวง T-Pop ชื่อดัง <strong>Jasper</strong>" },
+            'bioPerth': { en: "Stepping into the spotlight around 2017, Perth quickly rose to international fame. Known for his ability to convey deep, complex emotions, he is a multi-talented artist, gifted musician, singer, and guitarist. He is currently gearing up for his highly anticipated solo projects, <strong>Scarlet Heart</strong> and <strong>High & Low</strong>.", th: "เริ่มเข้าสู่วงการในปี 2017 Perth โด่งดังระดับนานาชาติอย่างรวดเร็ว เป็นที่รู้จักจากความสามารถในการถ่ายทอดอารมณ์ที่ lึกซึ้ง เขาเป็นศิลปินที่มีความสามารถหลากหลาย เป็นทั้งนักดนตรี นักร้อง และมือกีตาร์ ปัจจุบันเขاقำลังเตรียมพร้อมสำหรับโปรเจกต์เดี่ยวที่หลายคนรอคอย <strong>Scarlet Heart</strong> และ <strong>High & Low</strong>" },
+            'bioSanta': { en: "Santa burst onto the scene capturing hearts with his phenomenal dance skills and highly expressive acting. Known for his incredible versatility and natural ability to bring deep emotional resonance to his characters, he truly lights up the screen with every performance. Beyond his outstanding acting prowess, he is also a talented performer and a proud member of the beloved T-Pop group <strong>Jasper</strong>.", th: "Santa ปraกฏตัวและขโมยหัวใจด้วยทักษะการเต้นที่ยอดเยี่ยมและการแสดงที่สื่ออารมณ์ ด้วยความสามารถในการนำอารมณ์ที่ lึกซึ้งมาสู่ตัวละคร นอกเหนือจากความสามารถด้านการแสดงแล้ว เขayังเป็นนักแสดงที่มีพรสวรรค์และเป็นสมาชิกของวง T-Pop ชื่อดัง <strong>Jasper</strong>" },
             'bioDomiia': { en: "A little red-haired rocker demon who comes in a cool black suit with black and white wings. As the representative of PerthSanta's fan club, Domiia is ready to bring happiness to everyone.", th: "ปีศาจร็อกเกอร์ผมแดงตัวน้อยในชุดสูทสีดำสุดเท่พร้อมปีกสีขาวดำ ในฐานะตัวแทนแฟนคลับของ PerthSanta Domiia พร้อมที่จะมอบความสุขให้กับทุกคน" },
             'duoTitle': { en: "THE DUO: PERTHSANTA", th: "คู่หู: PERTHSANTA" },
             'duoSub': { en: "As a beloved duo, their partnership is a synergy built on mutual respect and shared creative vision.", th: "ในฐานะคู่หูที่เป็นที่รัก ความร่วมมือของพวกเขาคือการผนึกกำลังที่สร้างขึ้นจากความเคารพซึ่งกันและกันและวิสัยทัศน์เชิงสร้างสรรค์" },
@@ -926,7 +929,7 @@
             'cardInterviewsSub': { en: "Watch their exclusive interviews, variety shows, and promotional content.", th: "รับชมบทสัมภาษณ์สุดพิเศษ รายการวาไรตี้ และเนื้อหาโปรโมตของพวกเขา" },
             'btnWatchNow': { en: "WATCH NOW &rarr;", th: "ชมเลย &rarr;" },
             'titleSeriesHub': { en: "PERTHSANTA SERIES", th: "ซีรีส์ของ PERTHSANTA" },
-            'descP10L': { en: "The series explores the intricate dynamics of university life, following six students and three couples. It highlights the deep, protective bonds formed within the prestigious 'Perfect 10' engineering lineage, bringing Perth and Santa's dynamic chemistry to the forefront.", th: "ซีรีส์เรื่องนี้ถ่ายทอดความซับซ้อนของชีวิตมหาวิทยาลัย ผ่านเรื่องราวของนักศึกษา 6 คนและ 3 คู่รัก โดยเน้นสายสัมพันธ์อันแน่นแฟ้นที่ก่อตัวขึ้นภายในสายวิศวกรรมชื่อดัง “Perfect 10” พร้อมนำเสนอเคมีของ Perth และ Santa ได้อย่างลงตัว" },
+            'descP10L': { en: "The series explores the intricate dynamics of university life, following six students and three couples. It highlights the deep, protective bonds formed within the prestigious 'Perfect 10' engineering lineage, bringing Perth and Santa's dynamic chemistry to the forefront.", th: "ซีรีส์เรื่องนี้ถ่ายทอดความซับซ้อน of นักศึกษา 6 คนและ 3 คู่รัก โดยเน้นสายสัมพันธ์อันแน่นแฟ้นที่ก่อตัวขึ้นภายในสายวิศวกรรมชื่อดัง “Perfect 10” พร้อมนำเสนอเคมีของ Perth และ Santa ได้อย่างลงตัว" },
             'watchP10L': { en: "Watch on: GMMTV YouTube Channel", th: "รับชมทาง: GMMTV YouTube Channel" },
             'descLYT': { en: "A deeply emotional and mature narrative. After a serious accident, Solar suffers neurological damage. Pobmek's life changes dramatically as he is forced to balance the roles of a fiercely loving partner and a dedicated caregiver, pushing the boundaries of their acting skills.", th: "เรื่องราวที่เต็มไปด้วยอารมณ์ หลังจากอุบัติเหตุร้ายแรง Solar ได้รับความเสียหายทางระบบประสาท ชีวิตของ Pobmek เปลี่ยนไปอย่างมากเมื่อเขาต้องสร้างสมดุลระหว่างบทบาทของคนรักและผู้ดูแล" },
             'watchLYT': { en: "Watch on: Viki & oneD app", th: "รับชมทาง: Viki และ oneD app" },
@@ -934,15 +937,15 @@
             'descSLT': { en: "Prepare for the highly anticipated upcoming project that expands the PerthSanta universe.", th: "เตรียมพบกับโปรเจกต์ใหม่ที่ขยายจักรวาล PerthSanta ที่กำลังจะมาถึง" },
             'watchSLT': { en: "In Production", th: "กำลังถ่ายทำ" },
             'titleMusicHub': { en: "PERTHSANTA & THEIR MUSIC", th: "PERTHSANTA และเพลงของพวกเขา" },
-            'musicDuo': { en: "DUO COLLABORATIONS & OST", th: "การทำงานร่วมกันและเพลงประกอบ" },
+            'musicDuo': { en: "DUO COLLABORATIONS & OST", th: "การทำงานร่วมกัน and เพลงประกอบ" },
             'musicPerth': { en: "PERTH SOLO", th: "ผลงานเดี่ยวของ PERTH" },
-            'descMusicPerth': { en: "Known for his raw vocals and impressive guitar skills, his solo tracks reflect a deeply personal side of his artistry.", th: "เป็นที่รู้จักจากเสียงร้องที่ดิบและทักษะกีตาร์ที่น่าประทับใจ เพลงเดี่ยวของเขาสะท้อนให้เห็นถึงความเป็นศิลปินในมุมที่ลึกซึ้ง" },
+            'descMusicPerth': { en: "Known for his raw vocals and impressive guitar skills, his solo tracks reflect a deeply personal side of his artistry.", th: "เป็นที่รู้จักจากเสียงร้องที่ดิบและทักษะกีตาร์ที่น่าประทับใจ เพลงเดี่ยวของเขาสะท้อนให้เห็นถึงความเป็นศิลปินในมุมที่ lึกซึ้ง" },
             'musicJasper': { en: "JASPER (T-POP GROUP)", th: "JASPER (ศิลปินกลุ่ม T-POP)" },
             'descMusicJasper': { en: "Discover the rhythmic and highly energetic tracks by <strong>Jasper</strong>, combining captivating beats with dynamic flair.", th: "ค้นพบเพลงจังหวะสนุกและเปี่ยมพลังของ <strong>Jasper</strong> ที่ผสานบีตชวนติดหูเข้ากับสไตล์ที่มีชีวิตชีวา" },
             'musicIndividual': { en: "INDIVIDUAL OSTs", th: "เพลงประกอบเดี่ยว" },
             'descMusicIndividual': { en: "Relive the emotional highs of their individual acting careers through their original soundtracks.", th: "หวนย้อนสัมผัสช่วงเวลาทางอารมณ์อันเข้มข้นจากเส้นทางการแสดงของพวกเขาผ่านเพลงประกอบของแต่ละคน" },
             'trackPerth': { en: "Perth Tracks:", th: "เพลงของ Perth:" },
-            'trackSanta': { en: "Santa Tracks:", th: "เพลงของ Santa:" },
+            'trackSanta': { en: "Santa Tracks:", th: "เพลง of Santa:" },
             'titleInterviews': { en: "EXCLUSIVE INTERVIEWS", th: "บทสัมภาษณ์สุดพิเศษ" },
             'subtitleInterviews': { en: "LATEST SHOWS & INTERVIEWS", th: "รายการและบทสัมภาษณ์ล่าสุด" },
             'commTitle': { en: "JOIN THE COMMUNITY", th: "เข้าร่วมชุมชน" },
@@ -971,13 +974,13 @@
             'btnNext': { en: "Next &rarr;", th: "ถัดไป &rarr;" },
             'navContact': { en: "CONTACT", th: "ติดต่อ" },
             'navGuide': { en: "COMMUNITY GUIDELINES", th: "กฎระเบียบของชุมชน" },
-            'disclaimer': { en: "<strong>Disclaimer:</strong> This website is an unofficial, non-profit fan-created project dedicated to Perth Tanapon and Santa Pongsapak. This site is not affiliated with, endorsed by, or in any way officially connected to the actors, their management, <strong>GMMTV</strong>, or any related production companies. All official images, videos, logos, and trademarks used on this site are the sole property of their respective rightful owners. This platform is built purely out of love for entertainment and community purposes, and absolutely no copyright infringement is intended. We do not monetize or generate any income from this site. If you are the rightful copyright holder of any content displayed here and wish for it to be removed, please contact us via email at <strong>laylayleeepsuniverse@gmail.com</strong> or via X (Twitter) at <strong>@laylayleee</strong>, and it will be taken down immediately.", th: "<strong>คำสงวนสิทธิ์:</strong> เว็บไซต์นี้เป็นโปรเจกต์ที่แฟนคลับจัดทำขึ้นอย่างไม่เป็นทางการและไม่แสวงหาผลกำไร เพื่ออุทิศให้กับ Perth Tanapon และ Santa Pongsapak เว็บไซต์นี้ไม่มีส่วนเกี่ยวข้อง ได้รับการรับรอง หรือมีความเชื่อมโยงอย่างเป็นทางการกับนักแสดง ผู้จัดการ <strong>GMMTV</strong> หรือบริษัทผู้ผลิตที่เกี่ยวข้องใดๆ รูปภาพ วิดีโอ โลโก้ และเครื่องหมายการค้าอย่างเป็นทางการทั้งหมดที่ใช้ในเว็บไซต์นี้เป็นทรัพย์สินของเจ้าของที่แท้จริง แพลตฟอร์มนี้สร้างขึ้นด้วยความรักเพื่อความบันเทิงและเพื่อจุดประสงค์ของชุมชนเท่านั้น และไม่มีเจตนาละเมิดลิขสิทธิ์ใดๆ เราไม่สร้างรายได้หรือรับรายได้จากเว็บไซต์นี้ หากคุณเป็นผู้ถือลิขสิทธิ์ของเนื้อหาใดๆ ที่แสดงที่นี่และต้องการให้นำออก โปรดติดต่อเราทางอีเมลที่ <strong>laylayleeepsuniverse@gmail.com</strong> หรือผ่านทาง X (Twitter) ที่ <strong>@laylayleee</strong> และเราจะลบออกทันที" },
+            'disclaimer': { en: "<strong>Disclaimer:</strong> This website is an unofficial, non-profit fan-created project dedicated to Perth Tanapon and Santa Pongsapak. This site is not affiliated with, endorsed by, or in any way officially connected to the actors, their management, <strong>GMMTV</strong>, or any related production companies. All official images, videos, logos, and trademarks used on this site are the sole property of their respective rightful owners. This platform is built purely out of love for entertainment and community purposes, and absolutely no copyright infringement is intended. We do not monetize or generate any income from this site. If you are the rightful copyright holder of any content displayed here and wish for it to be removed, please contact us via email at <strong>laylayleeepsuniverse@gmail.com</strong> or via X (Twitter) at <strong>@laylayleee</strong>, and it will be taken down immediately.", th: "<strong>คำสงวนสิทธิ์:</strong> เว็บไซต์นี้เป็นโปรเจกต์ที่แฟนคลับจัดทำขึ้นอย่างไม่เป็นทางการและไม่แสวงหาผลกำไร เพื่ออุทิศให้กับ Perth Tanapon และ Santa Pongsapak เว็บไซต์นี้ไม่มีส่วนเกี่ยวข้อง ได้รับการรับรอง หรือมีความเชื่อมโยงอย่างเป็นทางการกับนักแสดง ผู้จัดการ <strong>GMMTV</strong> หรือบริษัทผู้ผลิตที่เกี่ยวข้องใดๆ รูปภาพ วิดีโอ โลโก้ และเครื่องหมายการค้าอย่างเป็นทางการทั้งหมดที่ใช้ในเว็บไซต์นี้เป็นทรัพย์สินของเจ้าของที่แท้จริง แพลตฟอร์มนี้สร้างขึ้นด้วยความรักเพื่อความบันเทิงและเพื่อจุดประสงค์ของชุมชนเท่านั้น และไม่มีเจtนาละเมิดลิขสิทธิ์ใดๆ เราไม่สร้างรายได้หรือรับรายได้จากเว็บไซต์นี้ หากคุณเป็นผู้ถือลิขสิทธิ์ของเนื้อหาใดๆ ที่แสดงที่นี่และต้องการให้นำออก โปรดติดต่อเราทางอีเมลที่ <strong>laylayleeepsuniverse@gmail.com</strong> หรือผ่านทาง X (Twitter) at <strong>@laylayleee</strong> และเราจะ lบออกทันที" },
             'authSub': { en: "Create an account to join the community.", th: "สร้างบัญชีเพื่อเข้าร่วมชุมชน" },
             'authSwitch': { en: "Switch", th: "สลับ" },
             'shareTitle': { en: "Share a Creation", th: "แบ่งปันผลงาน" },
             'shareSub': { en: "Contribute to the PerthSanta Universe.", th: "ร่วมเป็นส่วนหนึ่งของจักรวาล PerthSanta" },
             'btnSubmitShare': { en: "SHARE WITH COMMUNITY", th: "แบ่งปันกับชุมชน" },
-            'editTitle': { en: "Edit Post", th: "แก้ไขโพสต์" },
+            'editTitle': { en: "Edit Post", th: "EDIT POST" },
             'editSub': { en: "Update your creation details.", th: "อัปเดตรายละเอียดผลงานของคุณ" },
             'btnUpdate': { en: "UPDATE POST", th: "อัปเดตโพสต์" }
         };
@@ -1118,7 +1121,7 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'perthsanta-universe';
         const isCanvas = typeof __app_id !== 'undefined' || window.location.hostname.includes('usercontent.goog');
 
-        // Path Generators (Canvas test ortamında test veritabanını, canlı yayında ise tam yetkili orijinal kök koleksiyonları kullanır!)
+        // Path Generators (Canvas test ortamında test veritabanını, canlı yayında ise orijinal kök koleksiyonları kullanır)
         function getCollectionPath(colName) {
             if (isCanvas) {
                 return collection(db, 'artifacts', appId, 'public', 'data', colName);
@@ -1228,6 +1231,7 @@
         }
 
         window.deleteMusic = async function(id) {
+            if (!auth.currentUser) return;
             window.showConfirm("Are you sure you want to delete this music track?", async () => {
                 try {
                     await deleteDoc(getDocPath('music', id));
@@ -1240,6 +1244,7 @@
 
         document.getElementById('musicForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!auth.currentUser) return;
             const btn = document.getElementById('musicSubmitBtn');
             const msg = document.getElementById('musicModalMessage');
             btn.disabled = true;
@@ -1252,12 +1257,10 @@
             try {
                 if (window.currentEditMusicId) {
                     await updateDoc(getDocPath('music', window.currentEditMusicId), { category, title, link });
-                    msg.style.color = "#4caf50";
-                    msg.innerText = "Music updated successfully!";
+                    window.showToast("Music updated successfully!");
                 } else {
                     await addDoc(getCollectionPath('music'), { category, title, link, createdAt: Date.now() });
-                    msg.style.color = "#4caf50";
-                    msg.innerText = "Music added successfully!";
+                    window.showToast("Music added successfully!");
                 }
                 setTimeout(() => {
                     document.getElementById('musicModal').style.display = 'none';
@@ -1308,6 +1311,7 @@
         }
 
         window.deleteInterview = async function(id) {
+            if (!auth.currentUser) return;
             window.showConfirm("Are you sure you want to delete this interview link?", async () => {
                 try {
                     await deleteDoc(getDocPath('interviews', id));
@@ -1320,6 +1324,7 @@
 
         document.getElementById('interviewForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!auth.currentUser) return;
             const btn = document.getElementById('interviewSubmitBtn');
             const msg = document.getElementById('interviewModalMessage');
             btn.disabled = true;
@@ -1331,12 +1336,10 @@
             try {
                 if (window.currentEditInterviewId) {
                     await updateDoc(getDocPath('interviews', window.currentEditInterviewId), { title, link });
-                    msg.style.color = "#4caf50";
-                    msg.innerText = "Interview updated successfully!";
+                    window.showToast("Interview updated successfully!");
                 } else {
                     await addDoc(getCollectionPath('interviews'), { title, link, createdAt: Date.now() });
-                    msg.style.color = "#4caf50";
-                    msg.innerText = "Interview added successfully!";
+                    window.showToast("Interview added successfully!");
                 }
                 setTimeout(() => {
                     document.getElementById('interviewModal').style.display = 'none';
@@ -1412,6 +1415,7 @@
         }
 
         window.deleteSchedule = async function(id) {
+            if (!auth.currentUser) return;
             window.showConfirm("Are you sure you want to delete this event?", async () => {
                 try {
                     await deleteDoc(getDocPath('schedule', id));
@@ -1434,6 +1438,7 @@
 
         document.getElementById('editScheduleForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!auth.currentUser) return;
             const btn = document.getElementById('editScheduleSubmitBtn');
             const msg = document.getElementById('editScheduleMessage');
             btn.disabled = true;
@@ -1462,6 +1467,7 @@
 
         document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!auth.currentUser) return;
             const btn = e.target.querySelector('button');
             const msg = document.getElementById('scheduleMessage');
             btn.disabled = true;
@@ -1490,6 +1496,7 @@
         // COMMUNITY POST CONTROLLERS
         // ==========================================
         window.deletePost = async function(postId) {
+            if (!auth.currentUser) return;
             window.showConfirm("Are you sure you want to delete this post? This action cannot be undone.", async () => {
                 try {
                     await deleteDoc(getDocPath('posts', postId));
@@ -1517,6 +1524,7 @@
 
         document.getElementById('editPostForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!auth.currentUser) return;
             const submitBtn = document.getElementById('editPostSubmitBtn');
             const msg = document.getElementById('editPostMessage');
             
@@ -1817,10 +1825,81 @@
         });
 
         // ==========================================
-        // AUTHENTICATION FLOW & SNAPSHOT SUB (RULE 3)
+        // DATABASE SUBSCRIPTION INITIALIZATION
         // ==========================================
-        let unsubscribes = [];
-        
+        function initDatabaseSubscriptions(user) {
+            if (!user) return;
+
+            // Unsubscribe existing observers to avoid duplication leaks
+            unsubscribes.forEach(u => u());
+            unsubscribes = [];
+
+            // SUB 1: Posts Snap (Simple Query + In-Memory sorting for Rule 2)
+            const postsUnsub = onSnapshot(getCollectionPath('posts'), (snapshot) => {
+                window.allCommunityPosts = [];
+                snapshot.forEach((docSnapshot) => {
+                    const post = docSnapshot.data();
+                    post.id = docSnapshot.id; 
+                    if(post.title) {
+                        window.allCommunityPosts.push(post);
+                    }
+                });
+                
+                // Sort in memory by createdAt descending
+                window.allCommunityPosts.sort((a, b) => {
+                    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                    return dateB - dateA;
+                });
+                window.renderFeeds();
+            }, (error) => console.error("Posts subscription error:", error));
+            unsubscribes.push(postsUnsub);
+
+            // SUB 2: Schedule Snap (Simple Query + In-Memory sorting for Rule 2)
+            const schedUnsub = onSnapshot(getCollectionPath('schedule'), (snap) => {
+                window.allScheduleEvents = [];
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    data.id = docSnap.id;
+                    window.allScheduleEvents.push(data);
+                });
+                
+                // Sort in memory by date ascending
+                window.allScheduleEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+                window.renderSchedule();
+            }, (error) => console.error("Schedule subscription error:", error));
+            unsubscribes.push(schedUnsub);
+
+            // SUB 3: Music Snap (Simple collection fetch)
+            const musicUnsub = onSnapshot(getCollectionPath('music'), (snap) => {
+                window.allMusicItems = [];
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    data.id = docSnap.id;
+                    window.allMusicItems.push(data);
+                });
+                window.allMusicItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                window.renderMusic();
+            }, (error) => console.error("Music subscription error:", error));
+            unsubscribes.push(musicUnsub);
+
+            // SUB 4: Interviews Snap (Simple collection fetch)
+            const interviewUnsub = onSnapshot(getCollectionPath('interviews'), (snap) => {
+                window.allInterviewItems = [];
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    data.id = docSnap.id;
+                    window.allInterviewItems.push(data);
+                });
+                window.allInterviewItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                window.renderInterviews();
+            }, (error) => console.error("Interview subscription error:", error));
+            unsubscribes.push(interviewUnsub);
+        }
+
+        // ==========================================
+        // AUTH LIFE CYCLE & LISTENERS SUBSCRIPTION
+        // ==========================================
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
@@ -1833,15 +1912,11 @@
             }
         };
 
-        // Initialize Authentication immediately
-        initAuth();
-
         onAuthStateChanged(auth, async (user) => {
-            // Unsubscribe all active listeners to prevent duplications
-            unsubscribes.forEach(u => u());
-            unsubscribes = [];
-
             if (user) {
+                // Kural 3'e tam uyum: Veritabanı sorgularını ancak yetkilendirme (Auth) tamamlandıktan sonra başlatıyoruz!
+                initDatabaseSubscriptions(user);
+
                 // If logged in anonymously (Guest Mode)
                 if (user.isAnonymous) {
                     document.getElementById('loginNavLi').style.display = 'block';
@@ -1877,73 +1952,15 @@
                         document.body.classList.remove('admin-active');
                     }
                 }
-
-                // SUB 1: Posts Snap (Simple Query + In-Memory sorting for Rule 2)
-                const postsUnsub = onSnapshot(getCollectionPath('posts'), (snapshot) => {
-                    window.allCommunityPosts = [];
-                    snapshot.forEach((docSnapshot) => {
-                        const post = docSnapshot.data();
-                        post.id = docSnapshot.id; 
-                        if(post.title) {
-                            window.allCommunityPosts.push(post);
-                        }
-                    });
-                    
-                    // Sort in memory by createdAt descending
-                    window.allCommunityPosts.sort((a, b) => {
-                        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-                        return dateB - dateA;
-                    });
-                    window.renderFeeds();
-                }, (error) => console.error("Posts subscription error:", error));
-                unsubscribes.push(postsUnsub);
-
-                // SUB 2: Schedule Snap (Simple Query + In-Memory sorting for Rule 2)
-                const schedUnsub = onSnapshot(getCollectionPath('schedule'), (snap) => {
-                    window.allScheduleEvents = [];
-                    snap.forEach(docSnap => {
-                        const data = docSnap.data();
-                        data.id = docSnap.id;
-                        window.allScheduleEvents.push(data);
-                    });
-                    
-                    // Sort in memory by date ascending
-                    window.allScheduleEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
-                    window.renderSchedule();
-                }, (error) => console.error("Schedule subscription error:", error));
-                unsubscribes.push(schedUnsub);
-
-                // SUB 3: Music Snap (Simple Query)
-                const musicUnsub = onSnapshot(getCollectionPath('music'), (snap) => {
-                    window.allMusicItems = [];
-                    snap.forEach(docSnap => {
-                        const data = docSnap.data();
-                        data.id = docSnap.id;
-                        window.allMusicItems.push(data);
-                    });
-                    // Sort by newest
-                    window.allMusicItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                    window.renderMusic();
-                }, (error) => console.error("Music subscription error:", error));
-                unsubscribes.push(musicUnsub);
-
-                // SUB 4: Interviews Snap (Simple Query)
-                const interviewUnsub = onSnapshot(getCollectionPath('interviews'), (snap) => {
-                    window.allInterviewItems = [];
-                    snap.forEach(docSnap => {
-                        const data = docSnap.data();
-                        data.id = docSnap.id;
-                        window.allInterviewItems.push(data);
-                    });
-                    window.allInterviewItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                    window.renderInterviews();
-                }, (error) => console.error("Interview subscription error:", error));
-                unsubscribes.push(interviewUnsub);
-
             } else {
-                initAuth();
+                await initAuth();
             }
+
+            // Oturum durumu değiştiğinde butonların görünürlüğünü güncellemek için listeleri tekrar çiz
+            window.renderFeeds();
+            window.renderSchedule();
+            window.renderMusic();
+            window.renderInterviews();
         });
 
         window.logoutUser = function() {
@@ -1956,10 +1973,11 @@
         const postForm = document.getElementById('postForm');
         postForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!auth.currentUser) return;
             const postSubmitBtn = document.getElementById('postSubmitBtn');
             const postMessage = document.getElementById('postMessage');
             
-            if(!auth.currentUser || auth.currentUser.isAnonymous) {
+            if(auth.currentUser.isAnonymous) {
                 postMessage.style.color = "var(--accent-red)";
                 postMessage.innerText = window.currentLang === 'th' ? "คุณต้องเข้าสู่ระบบเพื่อแชร์โพสต์" : "You must be logged in to share a post.";
                 return;
